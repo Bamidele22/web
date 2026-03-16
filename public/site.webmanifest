@@ -3,13 +3,13 @@
   "short_name": "Ayodeji",
   "icons": [
       {
-          "src": "./android-chrome-192x192.png",
+          "src": "/android-icon-192x192.png",
           "sizes": "192x192",
           "type": "image/png"
       },
       {
-          "src": "./android-chrome-256x256.png",
-          "sizes": "256x256",
+          "src": "/android-icon-144x144.png",
+          "sizes": "144x144",
           "type": "image/png"
       }
   ],
