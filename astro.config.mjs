@@ -12,5 +12,13 @@ export default defineConfig({
   server: {
     port: 8000
   },
-  site: 'https://bamidele22.github.io'
+  site: 'https://bamidele22.github.io',
+  markdown: {
+    syntaxHighlight: 'shiki',
+    shikiConfig: {
+      theme: 'github-dark',
+      wrap: true,
+    },
+    gfm: true,
+  },
 });
