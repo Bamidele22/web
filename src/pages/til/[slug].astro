@@ -1,0 +1,344 @@
+---
+import { getCollection } from 'astro:content';
+import PageLayout from '../../layouts/PageLayout.astro';
+
+export async function getStaticPaths() {
+  const tilPosts = await getCollection('til');
+  return tilPosts.map(post => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+// Get related TILs by category and tags
+const allTil = await getCollection('til');
+const related = allTil
+  .filter(p => 
+    p.slug !== post.slug && 
+    (p.data.category === post.data.category || 
+     p.data.tags.some(tag => post.data.tags.includes(tag)))
+  )
+  .slice(0, 3);
+---
+
+<PageLayout 
+  title={post.data.title} 
+  description={post.data.description}
+>
+  <main class="container">
+    <article class="til-post">
+      <header class="post-header">
+        <h1>{post.data.title}</h1>
+        <div class="post-meta">
+          <span class="date">
+            {post.data.learnedDate.toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+          </span>
+          <span class="category">{post.data.category}</span>
+          {post.data.tags.length > 0 && (
+            <div class="tags">
+              {post.data.tags.map(tag => (
+                <span class="tag">{tag}</span>
+              ))}
+            </div>
+          )}
+        </div>
+        <p class="description">{post.data.description}</p>
+        <a href="/til/" class="back-link">← Back to TIL</a>
+      </header>
+
+      <div class="post-content">
+        <Content />
+      </div>
+
+      {related.length > 0 && (
+        <section class="related-tils">
+          <h2>Related Learnings</h2>
+          <div class="related-grid">
+            {related.map(relatedPost => (
+              <a href={`/til/${relatedPost.slug}`} class="related-card">
+                <h3>{relatedPost.data.title}</h3>
+                <p>{relatedPost.data.description}</p>
+                <span class="category">{relatedPost.data.category}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+    </article>
+  </main>
+</PageLayout>
+
+<style lang="scss">
+  @import "../../assets/css/_utils.scss";
+
+  main {
+    padding: 2rem 1rem;
+
+    @include mobile {
+      padding: 1.5rem 1rem;
+    }
+  }
+
+  .til-post {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .post-header {
+    margin-bottom: 3rem;
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+
+      @include mobile {
+        font-size: 1.5rem;
+      }
+    }
+
+    .post-meta {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      flex-wrap: wrap;
+
+      .date {
+        color: #888;
+        font-weight: 500;
+      }
+
+      .category {
+        background: rgba(25, 21, 69, 0.1);
+        color: var(--primary);
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+
+      .tags {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+
+        .tag {
+          background: rgba(25, 21, 69, 0.08);
+          color: var(--primary);
+          padding: 0.3rem 0.6rem;
+          border-radius: 3px;
+          font-size: 0.8rem;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .description {
+      font-size: 1.1rem;
+      color: #666;
+      line-height: 1.6;
+      margin: 1.5rem 0;
+    }
+
+    .back-link {
+      display: inline-block;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      margin-top: 1rem;
+      transition: all 0.3s ease;
+
+      &:hover {
+        text-decoration: underline;
+        transform: translateX(-4px);
+      }
+    }
+  }
+
+  .post-content {
+    :global {
+      p {
+        line-height: 1.8;
+        margin: 1.5rem 0;
+        color: #333;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+        margin: 2rem 0 1rem;
+        color: var(--primary);
+        font-family: var(--font-semi-bold);
+      }
+
+      h3 {
+        font-size: 1.2rem;
+        margin: 1.5rem 0 0.75rem;
+        color: var(--primary);
+        font-family: var(--font-semi-bold);
+      }
+
+      strong {
+        font-family: var(--font-semi-bold);
+        color: #222;
+      }
+
+      em {
+        font-style: italic;
+        color: #555;
+      }
+
+      ul, ol {
+        margin: 1.5rem 0;
+        padding-left: 2rem;
+        color: #333;
+
+        li {
+          margin: 0.5rem 0;
+          line-height: 1.6;
+        }
+      }
+
+      blockquote {
+        border-left: 4px solid var(--primary);
+        padding-left: 1rem;
+        margin: 1.5rem 0;
+        color: #666;
+        font-style: italic;
+        background: rgba(25, 21, 69, 0.03);
+        padding: 1rem;
+        border-radius: 4px;
+      }
+
+      code {
+        background: rgba(25, 21, 69, 0.08);
+        color: #d63384;
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.9em;
+      }
+
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        border-radius: 6px;
+        overflow-x: auto;
+        margin: 1.5rem 0;
+        border: 1px solid #ddd;
+
+        code {
+          background: none;
+          color: #333;
+          padding: 0;
+          border-radius: 0;
+        }
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+        border: 1px solid #ddd;
+
+        th, td {
+          padding: 0.75rem;
+          text-align: left;
+          border: 1px solid #ddd;
+        }
+
+        th {
+          background: rgba(25, 21, 69, 0.1);
+          font-weight: 600;
+          color: var(--primary);
+        }
+
+        tr:nth-child(even) {
+          background: rgba(25, 21, 69, 0.03);
+        }
+      }
+
+      img {
+        max-width: 100%;
+        height: auto;
+        margin: 1.5rem 0;
+        border-radius: 6px;
+      }
+
+      a {
+        color: var(--primary);
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .related-tils {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(25, 21, 69, 0.1);
+
+    h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+    }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    .related-card {
+      border: 1px solid rgba(213, 213, 213, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      background: #fff;
+
+      &:hover {
+        border-color: rgba(213, 213, 213, 0.6);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+      }
+
+      h3 {
+        font-size: 1rem;
+        margin: 0 0 0.5rem 0;
+        color: var(--primary);
+        font-family: var(--font-semi-bold);
+      }
+
+      p {
+        font-size: 0.9rem;
+        color: #666;
+        margin: 0.5rem 0;
+        line-height: 1.4;
+      }
+
+      .category {
+        display: inline-block;
+        background: rgba(25, 21, 69, 0.1);
+        color: var(--primary);
+        padding: 0.3rem 0.6rem;
+        border-radius: 3px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+      }
+    }
+  }
+</style>

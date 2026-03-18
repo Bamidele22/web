@@ -1,0 +1,220 @@
+---
+import { getCollection } from 'astro:content';
+import PageLayout from '../../layouts/PageLayout.astro';
+
+const tilPosts = await getCollection('til');
+
+const sortedTil = tilPosts
+  .sort((a, b) => b.data.learnedDate.valueOf() - a.data.learnedDate.valueOf());
+
+// Group by category
+const byCategory = sortedTil.reduce((acc, post) => {
+  const cat = post.data.category;
+  if (!acc[cat]) acc[cat] = [];
+  acc[cat].push(post);
+  return acc;
+}, {});
+
+const categories = Object.keys(byCategory).sort();
+---
+
+<PageLayout 
+  title="Today I Learned" 
+  description="Daily and weekly DevOps learnings and discoveries"
+>
+  <main class="container">
+    <header class="til-section">
+      <h1 class="name">
+        <span class="text-stroke">Today, I Learnt:</span>
+      </h1>
+      <h4 class="motivation">Motivation: To build a habit of consistency and committing to competence!</h4>
+    </header>
+
+    <section class="til-content">
+      {categories.map(category => (
+        <div class="category-group">
+          <h2 class="category-title">{category}</h2>
+          <div class="til-cards">
+            {byCategory[category].map(post => (
+              <article class="til-card">
+                <h3>
+                  <a href={`/til/${post.slug}`}>{post.data.title}</a>
+                </h3>
+                <p class="description">{post.data.description}</p>
+                <div class="til-meta">
+                  <span class="date">
+                    {post.data.learnedDate.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </span>
+                  {post.data.tags.length > 0 && (
+                    <div class="tags">
+                      {post.data.tags.map(tag => (
+                        <span class="tag">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <a href={`/til/${post.slug}`} class="read-more">Read →</a>
+              </article>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {sortedTil.length === 0 && (
+        <div class="no-tils">
+          <p>No learnings yet. Check back soon! 📚</p>
+        </div>
+      )}
+    </section>
+  </main>
+</PageLayout>
+
+<style lang="scss">
+  @import "../../assets/css/_utils.scss";
+
+  main {
+    padding: 2rem 1rem;
+
+    @include mobile {
+      padding: 1.5rem 1rem;
+    }
+  }
+
+  .til-section {
+    text-align: center;
+    margin-bottom: 3rem;
+
+    .name {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+
+      @include mobile {
+        font-size: 1.8rem;
+      }
+    }
+
+    .motivation {
+      font-size: 1.1rem;
+      color: #666;
+      font-family: var(--font-light);
+      margin: 1rem 0;
+      line-height: 1.6;
+    }
+  }
+
+  .til-content {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .category-group {
+    margin-bottom: 3rem;
+  }
+
+  .category-title {
+    font-size: 1.5rem;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+    font-family: var(--font-medium);
+    border-bottom: 2px solid rgba(25, 21, 69, 0.1);
+    padding-bottom: 0.75rem;
+  }
+
+  .til-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .til-card {
+    border: 1px solid rgba(213, 213, 213, 0.3);
+    border-radius: 10px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    background: #fff;
+
+    &:hover {
+      border-color: rgba(213, 213, 213, 0.6);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+      transform: translateY(-3px);
+    }
+
+    h3 {
+      font-size: 1.2rem;
+      margin: 0 0 0.75rem 0;
+      font-family: var(--font-semi-bold);
+
+      a {
+        color: var(--primary);
+        text-decoration: none;
+        transition: color 0.3s ease;
+
+        &:hover {
+          color: rgba(25, 21, 69, 0.7);
+          text-decoration: underline;
+        }
+      }
+    }
+
+    .description {
+      color: #666;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0 0 1rem 0;
+    }
+
+    .til-meta {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin: 1rem 0;
+      font-size: 0.85rem;
+      flex-wrap: wrap;
+
+      .date {
+        color: #888;
+        font-weight: 500;
+      }
+
+      .tags {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+
+        .tag {
+          background: rgba(25, 21, 69, 0.08);
+          color: var(--primary);
+          padding: 0.3rem 0.6rem;
+          border-radius: 3px;
+          font-size: 0.75rem;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .read-more {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-block;
+      margin-top: 0.75rem;
+      transition: all 0.3s ease;
+
+      &:hover {
+        text-decoration: underline;
+        transform: translateX(4px);
+      }
+    }
+  }
+
+  .no-tils {
+    text-align: center;
+    padding: 3rem;
+    color: #999;
+    font-size: 1.1rem;
+  }
+</style>

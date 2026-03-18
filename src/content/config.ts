@@ -13,6 +13,18 @@ const blogCollection = defineCollection({
   }),
 });
 
+const tilCollection = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    learnedDate: z.coerce.date(),
+    category: z.string(),
+    tags: z.array(z.string()).default([]),
+  }),
+});
+
 export const collections = {
   blog: blogCollection,
+  til: tilCollection,
 };
